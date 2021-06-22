@@ -12,10 +12,13 @@ library
   exposed-modules:
       Aoc2019.D1
       Aoc2019.Intcode.Interpreter
+      Aoc2019.Intcode.Interpreter.Symbolic
       Aoc2019.Intcode.Programs
+      Aoc2019.Intcode.Programs.D2
       Aoc2019.Intcode.Tape
       Aoc2019.LinSys
       Aoc2019.Parsers
+      Aoc2019.Utils
   other-modules:
       Paths_aoc2019
   hs-source-dirs:

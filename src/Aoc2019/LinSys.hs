@@ -12,3 +12,6 @@ lsTest1v = vector [9, 48]
 
 lsTest1Solve :: Vector R
 lsTest1Solve = lsTest1m <\> lsTest1v
+
+--lsTest2Diaphantinem :: Field t => Matrix t
+--lsTest2Diaphantinem = 
