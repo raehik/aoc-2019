@@ -1,0 +1,55 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.4.
+--
+-- see: https://github.com/sol/hpack
+
+name:           aoc2019
+version:        0.0.0
+build-type:     Simple
+
+library
+  exposed-modules:
+      Aoc2019.D1
+      Aoc2019.Intcode.Interpreter
+      Aoc2019.Intcode.Programs
+      Aoc2019.Intcode.Tape
+      Aoc2019.LinSys
+      Aoc2019.Parsers
+  other-modules:
+      Paths_aoc2019
+  hs-source-dirs:
+      src
+  default-extensions:
+      OverloadedStrings
+      LambdaCase
+  build-depends:
+      base
+    , containers
+    , hmatrix
+    , lens
+    , megaparsec
+    , mtl
+    , text
+  default-language: Haskell2010
+
+executable aoc2019-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_aoc2019
+  hs-source-dirs:
+      app
+  default-extensions:
+      OverloadedStrings
+      LambdaCase
+  ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      aoc2019
+    , base
+    , containers
+    , hmatrix
+    , lens
+    , megaparsec
+    , mtl
+    , text
+  default-language: Haskell2010

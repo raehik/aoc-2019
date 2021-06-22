@@ -1,0 +1,29 @@
+name: aoc2019
+
+default-extensions:
+- OverloadedStrings
+- LambdaCase
+
+dependencies:
+- base
+- mtl
+- containers
+- text
+- lens
+- megaparsec
+- hmatrix
+
+library:
+  source-dirs: src
+
+executables:
+  aoc2019-exe:
+    main: Main.hs
+    source-dirs: app
+    ghc-options:
+    - -Wall
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - aoc2019
