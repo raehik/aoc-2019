@@ -3,12 +3,13 @@
 module Aoc2019.Intcode.Interpreter.Default where
 
 import           Prelude hiding (read)
+
+import           Aoc2019.Intcode.Interpreter
+import           Aoc2019.Intcode.Tape
 import qualified Aoc2019.Intcode.Instruction.Int as Instr
 import           Aoc2019.Intcode.Instruction.Int ( Instruction(..)
                                                  , ParamMode(..)
                                                  )
-import           Aoc2019.Intcode.Interpreter
-import           Aoc2019.Intcode.Tape
 
 exec
     :: (MonadInterp m, InterpTape m ~ t, Integral a, Symbol t ~ a, Index t ~ a)
@@ -76,15 +77,22 @@ stepBinop f im1 im2 om = do
 --
 -- I think this is a great example of highly-polymorphic code simplifying
 -- the process of writing definitions. Here, the function definition follows
--- naturally from the type: we need to return a symbol from the configured tape,
--- and to do that we're given a symbol and the fact that we can index over the
--- list with that same symbol.
+-- naturally from the type:
+--
+--   * We need to return a symbol from the configured tape.
+--   * We're given a pointer for the tape, a parameter mode, and the fact that
+--     the tape symbol is the same as its index type (i.e. pointers are regular
+--     data).
+--
+-- We can retrieve the requested value in two ways: either grab another symbol
+-- from the tape, or realise that the pointer we're given is a valid symbol
+-- itself and return that. That decision is made by checking the parameter mode.
 --
 -- Actually, yeah, this part deserves a write-up. This feels like the function I
 -- was aiming to write all along.
 getParamValue
     :: (MonadInterp m, InterpTape m ~ t, Num a, Symbol t ~ a, Index t ~ a)
-    => Symbol t -> ParamMode -> m (Symbol t)
+    => Index t -> ParamMode -> m (Symbol t)
 getParamValue sym = \case
   PosMode -> jump sym >> read
   ImmMode -> return sym

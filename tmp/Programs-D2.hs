@@ -6,6 +6,8 @@ import           Prelude hiding (read)
 import           Aoc2019.Intcode.Interpreter.Symbolic
 import qualified Data.Map.Lazy as Map
 
+{-
+
 i :: a -> Sym a
 i = SymConst
 
@@ -88,3 +90,5 @@ d2Symbolic =
   , i 99
   , i 2, i 14, i 0 , i 0
   ]
+
+-}

@@ -16,13 +16,14 @@ library
       Aoc2019.Intcode.Interpreter
       Aoc2019.Intcode.Interpreter.Default
       Aoc2019.Intcode.Interpreter.Symbolic
+      Aoc2019.Intcode.Interpreter.Symbolic.MvarPoly
       Aoc2019.Intcode.Machine
       Aoc2019.Intcode.Programs
-      Aoc2019.Intcode.Programs.D2
       Aoc2019.Intcode.Tape
       Aoc2019.Intcode.Tape.IntMap
       Aoc2019.Intcode.Tmp.ExecTests
       Aoc2019.Intcode.Tmp.ExecTestsOld
+      Aoc2019.Intcode.Tmp.ExecTestsSymbolic
       Aoc2019.LinSys
       Aoc2019.Parsers
       Aoc2019.Utils
