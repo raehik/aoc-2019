@@ -15,23 +15,23 @@ import           Aoc2019.Intcode.Tape
 import           Aoc2019.Intcode.Tape.IntMapFixedPoint
 import           Control.Monad.State.Lazy
 
-newtype IOTapeMachineFP a = IOTapeMachineFP
-  { runIOTapeMachineFP :: StateT (IdxIntMapFP Int) IO a
+newtype IOTapeMachineFP t a = IOTapeMachineFP
+  { runIOTapeMachineFP :: StateT (IdxIntMapFP t) IO a
   } deriving ( Functor
              , Applicative
              , Monad
              , MonadIO
-             , MonadState (IdxIntMapFP Int)
+             , MonadState (IdxIntMapFP t)
              )
 
 --updateTapeOrContinueWithIOLog :: (MonadIO m, MonadInterp m) => Maybe (InterpTape m) -> m ()
-updateTapeOrContinueWithIOLog :: Maybe (InterpTape IOTapeMachineFP) -> IOTapeMachineFP ()
+updateTapeOrContinueWithIOLog :: Maybe (InterpTape (IOTapeMachineFP t)) -> IOTapeMachineFP t ()
 updateTapeOrContinueWithIOLog = \case
   Nothing    -> liftIO $ putStrLn "program error, ignoring"
   Just tape' -> put tape'
 
-instance MonadInterp IOTapeMachineFP where
-    type InterpTape IOTapeMachineFP = IdxIntMapFP Int
+instance MonadInterp (IOTapeMachineFP t) where
+    type InterpTape (IOTapeMachineFP t) = IdxIntMapFP t
     next = get >>= updateTapeOrContinueWithIOLog . tapeNext
     prev = get >>= updateTapeOrContinueWithIOLog . tapePrev
     read = get >>= return . tapeRead

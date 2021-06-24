@@ -6,6 +6,7 @@ import           Prelude hiding (read)
 
 import           Aoc2019.Intcode.Interpreter
 import           Aoc2019.Intcode.Tape
+import           Aoc2019.Intcode.Tape.IntMapFixedPoint
 import qualified Aoc2019.Intcode.Instruction.Int as Instr
 import           Aoc2019.Intcode.Instruction.Int ( Instruction(..)
                                                  , ParamMode(..)
@@ -15,41 +16,40 @@ import           Aoc2019.Intcode.Interpreter.Symbolic.MvarPoly
 
 import qualified Data.Map.Lazy as Map
 
-data Val
-  = ValConst Int
-  | ValExp   (MvarPoly Var Int Int)
+data Sym
+  = SymConst Int
+  | SymExp (MvarPoly Var Int Int)
     deriving (Eq, Ord, Show)
 
-data Sym t
-  = SymPlain    Val     -- ^ always val
-  | SymSnapshot Val t   -- ^ val at this point in time
-    deriving (Eq, Ord, Show)
-
-symVal :: Sym t -> Val
-symVal = \case
-  SymPlain    v   -> v
-  SymSnapshot v _ -> v
+type Sym' = Either (IdxIntMapFP Sym) Sym
 
 exec
-    :: (MonadInterp m, InterpTape m ~ t, Symbol t ~ Sym t, Index t ~ Int)
+    :: (MonadInterp m, InterpTape m ~ IdxIntMapFP Sym)
     => m Result
 exec = execWithStep step
 
 step
-    :: (MonadInterp m, InterpTape m ~ t, Symbol t ~ Sym t, Index t ~ Int)
+    :: (MonadInterp m, InterpTape m ~ IdxIntMapFP Sym)
     => m Step
 step = do
     sym <- read
-    case symVal sym of
-      ValConst sym' ->
-        case Instr.decode sym' of
-          Left err    -> return $ StepErr (ErrInstructionErr err)
-          Right instr -> handleInstr instr
-      ValExp _ -> return $ StepErr ErrUnimplemented  -- can't exec exprs
+    case sym of
+      Left _ ->
+        -- tried to execute a recursive tape - no farking clue
+        return $ StepErr ErrUnimplemented
+      Right sym' ->
+        case sym' of
+          SymExp _ ->
+            -- tried to execute an expr -- speculative execution?
+            return $ StepErr ErrUnimplemented
+          SymConst sym'' ->
+            case Instr.decode sym'' of
+              Left err    -> return $ StepErr (ErrInstructionErr err)
+              Right instr -> handleInstr instr
 
 -- | Handle an Intcode instruction.
 handleInstr
-    :: (MonadInterp m, InterpTape m ~ t, Symbol t ~ Sym t, Index t ~ Int)
+    :: (MonadInterp m, InterpTape m ~ IdxIntMapFP Sym)
     => Instruction ParamMode -> m Step
 handleInstr = \case
   Add im1 im2 om -> stepBinop symAdd im1 im2 om
@@ -58,8 +58,8 @@ handleInstr = \case
   _              -> return $ StepErr ErrUnimplemented
 
 stepBinop
-    :: (MonadInterp m, InterpTape m ~ t, Symbol t ~ Sym t, Index t ~ Int)
-    => (Symbol t -> Symbol t -> Symbol t)
+    :: (MonadInterp m, InterpTape m ~ IdxIntMapFP Sym)
+    => (Sym' -> Sym' -> Sym')
     -> ParamMode -> ParamMode -> ParamMode -> m Step
 stepBinop f im1 im2 om = do
     curPos <- readPos
@@ -73,18 +73,18 @@ stepBinop f im1 im2 om = do
     i1v <- getParamValue i1 im1
     i2v <- getParamValue i2 im2
     case o of
-      SymSnapshot _ _ ->
-        -- tried to write to snapshot TODO what does this _mean_ though??
+      Left _ ->
+        -- tried to write to recursive tape TODO what does this _mean_ though??
         return $ StepErr ErrUnimplemented
-      SymPlain val ->
-        case val of
-          ValExp _ ->
+      Right o' ->
+        case o' of
+          SymExp _ ->
             -- tried to write to plain expr -- seems impossible to solve
             return $ StepErr ErrUnimplemented
-          ValConst o' ->
+          SymConst o'' ->
             case om of
               PosMode -> do
-                jump o'
+                jump o''
                 write (i1v `f` i2v)
                 jump nextPos
                 continue
@@ -92,8 +92,8 @@ stepBinop f im1 im2 om = do
               ImmMode -> error "write parameter in immediate mode not allowed"
 
 getParamValue
-    :: (MonadInterp m, InterpTape m ~ t, Symbol t ~ Sym t, Index t ~ Int)
-    => Symbol t -> ParamMode -> m (Symbol t)
+    :: (MonadInterp m, InterpTape m ~ IdxIntMapFP Sym)
+    => Sym' -> ParamMode -> m Sym'
 getParamValue sym _ = return sym
 {-
     \case
@@ -111,34 +111,16 @@ getParamValue sym _ = return sym
   RelMode -> error "unimplemented" -- TODO
 -}
 
-symAdd :: Sym t -> Sym t -> Sym t
-symAdd (SymPlain x) (SymPlain y) = SymPlain (x `valAdd` y)
-symAdd (SymPlain x) (SymSnapshot y yss) = SymSnapshot (x `valAdd` y) yss
-symAdd (SymSnapshot x xss) (SymPlain y) = symAdd (SymPlain y) (SymSnapshot x xss)
--- TODO prioritising left... rofl this is bs
-symAdd (SymSnapshot x xss) (SymSnapshot y _) = SymSnapshot (x `valAdd` y) xss
+-- TODO
+symAdd :: Either (IdxIntMapFP Sym) Sym -> Either (IdxIntMapFP Sym) Sym -> Either (IdxIntMapFP Sym) Sym
+symAdd x _ = x
 
-symMul :: Sym t -> Sym t -> Sym t
-symMul (SymPlain x) (SymPlain y) = SymPlain (x `valMul` y)
-symMul (SymPlain x) (SymSnapshot y yss) = SymSnapshot (x `valMul` y) yss
-symMul (SymSnapshot x xss) (SymPlain y) = symMul (SymPlain y) (SymSnapshot x xss)
--- TODO prioritising left... rofl this is bs
-symMul (SymSnapshot x xss) (SymSnapshot y _) = SymSnapshot (x `valMul` y) xss
-
-valAdd :: Val -> Val -> Val
-valAdd (ValConst x) (ValConst y) = ValConst (x + y)
-valAdd (ValConst x) (ValExp   (MvarPoly y)) = ValExp (MvarPoly (Map.map (+x) y))
-valAdd (ValExp   x) (ValConst y) = valAdd (ValConst y) (ValExp x)
-valAdd (ValExp   x) (ValExp   y) = ValExp (mvarPolyAdd x y)
-
-valMul :: Val -> Val -> Val
-valMul (ValConst x) (ValConst y) = ValConst (x * y)
-valMul (ValConst x) (ValExp   (MvarPoly y)) = ValExp (MvarPoly (Map.map (*x) y))
-valMul (ValExp   x) (ValConst y) = valMul (ValConst y) (ValExp x)
-valMul (ValExp   x) (ValExp   y) = ValExp (mvarPolyMul x y)
+symMul :: Either (IdxIntMapFP Sym) Sym -> Either (IdxIntMapFP Sym) Sym -> Either (IdxIntMapFP Sym) Sym
+symMul x _ = x
 
 --------------------------------------------------------------------------------
 
+{-
 tmpSymtestProgTestImm :: [Sym t]
 tmpSymtestProgTestImm = map SymPlain
   [ i 1101, v "noun", v "verb", i 0
@@ -158,3 +140,23 @@ tmpSymtestProgTestPos = map SymPlain
   where
     i   = ValConst
     v x = ValExp $ MvarPoly $ Map.fromList [(Map.fromList [(x, 1)], 1)]
+tmpSymtestProgTestImm :: [Sym t]
+tmpSymtestProgTestImm = map SymPlain
+  [ i 1101, v "noun", v "verb", i 0
+  , i 99
+  , i 5, i 6, i 7, i 8, i 9
+  ]
+  where
+    i   = ValConst
+    v x = ValExp $ MvarPoly $ Map.fromList [(Map.fromList [(x, 1)], 1)]
+
+tmpSymtestProgTestPos :: [Sym t]
+tmpSymtestProgTestPos = map SymPlain
+  [ i 0001, v "noun", v "verb", i 0
+  , i 99
+  , i 5, i 6, i 7, i 8, i 9
+  ]
+  where
+    i   = ValConst
+    v x = ValExp $ MvarPoly $ Map.fromList [(Map.fromList [(x, 1)], 1)]
+-}
