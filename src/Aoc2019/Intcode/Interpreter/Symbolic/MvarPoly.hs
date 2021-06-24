@@ -8,18 +8,24 @@ import           Data.Map.Lazy (Map)
 import           Data.Text.Lazy (Text)
 import           Data.Text.Lazy.Builder
 
--- TODO: pull MvarPoly into its own module, and give it a typevar (which will
--- normally be constrained to Num, concretely Int and Double)
-
 type Var = Text
 
--- | a = term coefficient, b = power
-newtype MvarPoly a b = MvarPoly { unMvarPoly :: Map (Map Var b) a }
+-- | Multivariate polynomial over variable @v@, term coefficient @a@,
+--   and power @b@.
+--
+-- A multivariate polynomial is an expression containing multiple variables of
+-- various powers. e.g. @x^2 + 2xy - 2z + 1@. This type allows you to select
+-- your variable type, along with the numeric types used for powers and
+-- coefficients (letting you target Diophantine equations only, for example).
+--
+-- This is most certainly not all that efficient, but I'm stupid, thus care not.
+-- It gets me what I want in a very simple and clean manner.
+newtype MvarPoly v a b = MvarPoly { unMvarPoly :: Map (Map v b) a }
   deriving (Eq, Ord, Show)
 
 -- | Multiply two numeric 'MvarPoly's together. Does not attempt to retain
 --   normal form.
-mvarPolyMul :: (Ord b, Num a, Num b) => MvarPoly a b -> MvarPoly a b -> MvarPoly a b
+mvarPolyMul :: (Ord v, Ord b, Num a, Num b) => MvarPoly v a b -> MvarPoly v a b -> MvarPoly v a b
 mvarPolyMul (MvarPoly mL) (MvarPoly mR) = MvarPoly $ Map.foldrWithKey go Map.empty mR
   where
     --go :: (Num a, Num b) => Map Var b -> a -> Map (Map Var b) a -> Map (Map Var b) a
@@ -31,7 +37,7 @@ mvarPolyMul (MvarPoly mL) (MvarPoly mR) = MvarPoly $ Map.foldrWithKey go Map.emp
          in Map.insertWith (+) inner coeff mComb
 
 -- | Add two 'MvarPoly's together. Does not attempt to retain normal form.
-mvarPolyAdd :: (Ord b, Num a, Num b) => MvarPoly a b -> MvarPoly a b -> MvarPoly a b
+mvarPolyAdd :: (Ord v, Ord b, Num a, Num b) => MvarPoly v a b -> MvarPoly v a b -> MvarPoly v a b
 mvarPolyAdd (MvarPoly mL) (MvarPoly mR) = MvarPoly $ Map.unionWith (+) mL mR
 
 data Sign
@@ -46,8 +52,14 @@ pprintSign = \case
 -- Takes an MvarPoly in normal form (no 0 coeffs, no 0 powers). Will print
 -- "superfluous" terms if not in normal form. (Does handle empty expressions,
 -- however, since we need to for good sign behaviour anyway.)
-mvarPolyExpr :: (Ord a, Num a, Eq b, Num b, Show a, Show b) => MvarPoly a b -> Maybe Text
-mvarPolyExpr (MvarPoly m) =
+-- TODO: not ideal for strings, text etc. because now it quotes them, haha...
+mvarPolyExpr :: (Ord v, Ord a, Num a, Eq b, Num b, Show v, Show a, Show b) => MvarPoly v a b -> Maybe Text
+mvarPolyExpr = mvarPolyExpr' tshow
+
+mvarPolyExpr'
+    :: (Ord v, Ord a, Num a, Eq b, Num b, Show a, Show b)
+    => (v -> Text) -> MvarPoly v a b -> Maybe Text
+mvarPolyExpr' textify (MvarPoly m) =
     (fmap toLazyText . Map.foldrWithKey buildExpr Nothing) m
   where
     --buildExpr :: Map Var Int -> Int -> Maybe Builder -> Maybe Builder
@@ -63,5 +75,5 @@ mvarPolyExpr (MvarPoly m) =
         term  = if coeff == 1 then polyn else fromLazyText (tshow (abs coeff)) <> polyn
     --buildPolyPart :: Var -> Int -> Builder -> Builder
     buildPolyPart var pwr bld
-      | pwr == 1  = bld <> fromLazyText var
-      | otherwise = bld <> fromLazyText var <> "^" <> fromLazyText (tshow pwr)
+      | pwr == 1  = bld <> fromLazyText (textify var)
+      | otherwise = bld <> fromLazyText (textify var) <> "^" <> fromLazyText (tshow pwr)

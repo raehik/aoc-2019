@@ -8,10 +8,13 @@
 -- expression, it errors out. Using an expression as a pointer is also
 -- forbidden (again a terribly ugly state of affairs).
 --
--- Perhaps the above would be more possible if I implemented step semantics.
--- Which shouldn't be particularly hard.
+-- Using an expression as a pointer appears possible, but would require storing
+-- the current tape state on the tape. It all seems a bit challenging. I think
+-- I'd need to update my MvarPoly to be @Map (Map (Var, Bool) Int) Int@ to
+-- distinguish between "transient" variables (definitely stateful) and
+-- non-transient ones.
 
-{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Aoc2019.Intcode.Interpreter.Symbolic where
 
@@ -30,7 +33,7 @@ import qualified Data.Map.Lazy as Map
 
 data Sym a
   = SymConst a
-  | SymExp (MvarPoly Int Int)
+  | SymExp (MvarPoly Var Int Int)
   -- | SymPtr Int
     deriving (Eq, Ord, Show)
 
@@ -142,7 +145,7 @@ interpSymbolicTest prog = do
 --------------------------------------------------------------------------------
 
 -- | x^2 + 2x - 1
-mvarPolyEx1 :: MvarPoly Int Int
+mvarPolyEx1 :: MvarPoly Var Int Int
 mvarPolyEx1 = MvarPoly $ Map.fromList
   [ ( Map.fromList [ ("x", 2) ] , 1)
   , ( Map.fromList [ ("x", 1) ] , 2)
@@ -150,14 +153,14 @@ mvarPolyEx1 = MvarPoly $ Map.fromList
   ]
 
 -- | x + 1
-mvarPolyEx2 :: MvarPoly Int Int
+mvarPolyEx2 :: MvarPoly Var Int Int
 mvarPolyEx2 = MvarPoly $ Map.fromList
   [ ( Map.fromList [ ("x", 1) ] , 1)
   , ( Map.fromList []           , 1)
   ]
 
 -- | x + z + 2
-mvarPolyEx3 :: MvarPoly Int Int
+mvarPolyEx3 :: MvarPoly Var Int Int
 mvarPolyEx3 = MvarPoly $ Map.fromList
   [ ( Map.fromList [ ("x", 1) ] , 1)
   , ( Map.fromList [ ("z", 1) ] , 1)

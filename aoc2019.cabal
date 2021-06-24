@@ -17,15 +17,19 @@ library
       Aoc2019.Intcode.Interpreter.Default
       Aoc2019.Intcode.Interpreter.Symbolic
       Aoc2019.Intcode.Interpreter.Symbolic.MvarPoly
+      Aoc2019.Intcode.Interpreter.SymTest
       Aoc2019.Intcode.Machine
+      Aoc2019.Intcode.MachineSym
       Aoc2019.Intcode.Programs
       Aoc2019.Intcode.Programs.D2Symbolic
       Aoc2019.Intcode.Programs.Symbolic
       Aoc2019.Intcode.Tape
       Aoc2019.Intcode.Tape.IntMap
+      Aoc2019.Intcode.Tape.IntMapFixedPoint
       Aoc2019.Intcode.Tmp.ExecTests
       Aoc2019.Intcode.Tmp.ExecTestsOld
       Aoc2019.Intcode.Tmp.ExecTestsSymbolic
+      Aoc2019.Intcode.Tmp.ExecTestsSymbolic2
       Aoc2019.LinSys
       Aoc2019.Parsers
       Aoc2019.Utils

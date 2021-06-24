@@ -17,16 +17,6 @@ data IdxIntMap a = IdxIntMap
   } deriving (Eq, Ord, Show)
 $(makeLenses ''IdxIntMap)
 
-fromListToIdxIntMap :: [a] -> IdxIntMap a
-fromListToIdxIntMap = go 0 IntMap.empty
-  where
-    go len im []     = IdxIntMap im 0 len
-    go len im (x:xs) = go (len+1) (IntMap.insert len x im) xs
-
--- | Extract just the tape from an 'IdxIntMap'.
-idxIntMapTape :: IdxIntMap a -> [a]
-idxIntMapTape = map (\(_, v) -> v) . IntMap.toList . view iimMap
-
 instance Tape (IdxIntMap a) where
     type Symbol (IdxIntMap a) = a
     type Index (IdxIntMap a) = Int
@@ -47,3 +37,13 @@ instance Tape (IdxIntMap a) where
         then Just (IdxIntMap m jmp len)
         else Nothing
     tapePos = view iimPtr
+
+fromListToIdxIntMap :: [a] -> IdxIntMap a
+fromListToIdxIntMap = go 0 IntMap.empty
+  where
+    go len im []     = IdxIntMap im 0 len
+    go len im (x:xs) = go (len+1) (IntMap.insert len x im) xs
+
+-- | Extract just the tape from an 'IdxIntMap'.
+idxIntMapTape :: IdxIntMap a -> [a]
+idxIntMapTape = IntMap.elems . view iimMap
