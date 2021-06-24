@@ -1,9 +1,7 @@
 -- | DSL for writing Intcode interpreters ("tape machines").
 
-{-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE DataKinds                  #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeFamilies     #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Aoc2019.Intcode.Interpreter where
 
@@ -11,7 +9,10 @@ import           Prelude hiding (read)
 
 import           Data.Kind
 import           Aoc2019.Intcode.Tape
-import           Control.Monad.State.Lazy
+import qualified Aoc2019.Intcode.Instruction.Int as Instr
+--import           Aoc2019.Intcode.Instruction.Int ( Instruction(..)
+--                                                 , ParamMode(..)
+--                                                 )
 
 class (Monad m, Tape (InterpTape m)) => MonadInterp m where
     type InterpTape m :: Type
@@ -24,79 +25,33 @@ class (Monad m, Tape (InterpTape m)) => MonadInterp m where
     moveLeftmost  :: m ()
     moveRightmost :: m ()
 
-newtype IOTapeMachine t a = IOTapeMachine
-  { runIOTapeMachine :: StateT t IO a
-  } deriving ( Functor
-             , Applicative
-             , Monad
-             , MonadIO
-             , MonadState t
-             )
+data Error
+  = ErrInstructionErr Instr.Error
+  | ErrUnimplemented
+    deriving (Eq, Show)
 
---updateTapeOrContinueWithIOLog :: (MonadIO m, MonadInterp m) => Maybe (InterpTape m) -> m ()
-updateTapeOrContinueWithIOLog :: Maybe (InterpTape (IOTapeMachine t)) -> IOTapeMachine t ()
-updateTapeOrContinueWithIOLog = \case
-  Nothing    -> liftIO $ putStrLn "program error, ignoring"
-  Just tape' -> put tape'
+data Step
+  = Step            -- ^ regular step
+  | StepHalt        -- ^ step to end execution
+  | StepErr Error   -- ^ some error during step
+    deriving (Eq, Show)
 
-instance Tape t => MonadInterp (IOTapeMachine t) where
-    type InterpTape (IOTapeMachine t) = t
-    next = get >>= updateTapeOrContinueWithIOLog . tapeNext
-    prev = get >>= updateTapeOrContinueWithIOLog . tapePrev
-    read = get >>= return . tapeRead
-    write a = modify (tapeWrite a)
-    readPos = get >>= return . tapePos
-    jump idx = get >>= updateTapeOrContinueWithIOLog . tapeJump idx
+data Result
+  = OK              -- ^ execution ended successfully
+  | ExecError Error -- ^ execution terminated early due to error
+    deriving (Eq, Show)
 
-    -- TODO: This is where the efficiency starts to break down, and we need to
-    -- start writing more concrete instances with type Index t = Index, and
-    -- perhaps amending the Tape class or making extension Tape classes.
-    moveLeftmost = do
-        tape <- get
-        case tapePrev tape of
-          Nothing    -> return ()
-          Just tape' -> put tape' >> moveLeftmost
-    moveRightmost = do
-        tape <- get
-        case tapeNext tape of
-          Nothing    -> return ()
-          Just tape' -> put tape' >> moveRightmost
+-- | Continue execution (end a step).
+--
+-- Alias for @return Step@.
+continue :: Monad m => m Step
+continue = return Step
 
-stop :: Monad m => m ()
-stop = return ()
-
--- TODO: could add MonadIO m and change 'error' to 'liftIO (putStrLn' ...)
-interpExec
-    :: (MonadInterp m, InterpTape m ~ t, Num a, Eq a, Symbol t ~ a, Index t ~ a)
-    => m ()
-interpExec = do
-    opcode <- read
-    case opcode of
-      99 -> stop
-      1  -> interpPtrBinop (+) >> interpExec
-      2  -> interpPtrBinop (*) >> interpExec
-      _  -> error "unknown opcode" >> stop
-
--- | Holy shit rofl, check this out. Look at how generic this is. This builds a
---   binop opcode interpreter for *any interpreter which uses tape with Num-like
---   symbols and allows searching via Num-likes*. This is literally as abstract
---   as you can get sensibly.
-interpPtrBinop
-    :: (MonadInterp m, InterpTape m ~ t, Num a, Symbol t ~ a, Index t ~ a)
-    => (a -> a -> a) -> m ()
-interpPtrBinop f = do
-    curPos <- readPos
-    let nextPos = curPos + 4
-    next
-    in1 <- read
-    next
-    in2 <- read
-    next
-    out <- read
-    jump in1
-    in1v <- read
-    jump in2
-    in2v <- read
-    jump out
-    write (in1v `f` in2v)
-    jump nextPos
+-- | Given a step function, run the machine on the configured program until HALT
+--   or error.
+execWithStep :: Monad m => m Step -> m Result
+execWithStep step =
+    step >>= \case
+      Step        -> execWithStep step
+      StepHalt    -> return OK
+      StepErr err -> return (ExecError err)

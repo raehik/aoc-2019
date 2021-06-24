@@ -4,6 +4,7 @@ module Aoc2019.Intcode.Programs where
 
 import           Prelude hiding (read)
 import           Aoc2019.Intcode.Interpreter
+import           Aoc2019.Intcode.Interpreter.Default
 import           Aoc2019.Intcode.Tape
 import           Aoc2019.Parsers
 

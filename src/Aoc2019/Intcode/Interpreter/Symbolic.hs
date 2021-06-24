@@ -25,11 +25,9 @@ import           Aoc2019.Intcode.Tape
 import           Aoc2019.Intcode.Interpreter
 import qualified Data.Map.Lazy as Map
 import           Data.Map.Lazy (Map)
-import qualified Data.Text.Lazy.IO as Text
 import           Data.Text.Lazy (Text)
 import           Data.Text.Lazy.Builder
 import           Control.Monad.IO.Class
-import           Control.Monad.State.Lazy
 
 -- TODO: pull MvarPoly into its own module, and give it a typevar (which will
 -- normally be constrained to Num, concretely Int and Double)
@@ -89,6 +87,9 @@ data Sym a
   | SymExp MvarPoly
   -- | SymPtr Int
     deriving (Eq, Ord, Show)
+
+stop :: Monad m => m ()
+stop = return ()
 
 interpSymbolicExec
     :: (MonadInterp m, MonadIO m, InterpTape m ~ t, Symbol t ~ Sym Int, Index t ~ Int)
@@ -165,6 +166,7 @@ exProg =
     i = SymConst
     v x = SymExp $ Map.fromList [(Map.fromList [(x, 1)], 1)]
 
+{-
 interpSymbolicTest :: [Sym Int] -> IO ()
 interpSymbolicTest prog = do
     let initState = fromListToIdxIntMap prog
@@ -176,6 +178,7 @@ interpSymbolicTest prog = do
     let SymExp loc0Expr     = head tapeOut
         Just loc0ExprPretty = mvarPolyExpr loc0Expr
     Text.putStrLn loc0ExprPretty
+-}
 
 --------------------------------------------------------------------------------
 

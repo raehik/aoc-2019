@@ -27,3 +27,13 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - aoc2019
+
+tests:
+  spec:
+    main: Spec.hs
+    source-dirs: test
+    build-tools:
+    - hspec-discover
+    dependencies:
+    - aoc2019
+    - hspec

@@ -11,11 +11,16 @@ build-type:     Simple
 library
   exposed-modules:
       Aoc2019.D1
+      Aoc2019.Intcode.Instruction
+      Aoc2019.Intcode.Instruction.Int
       Aoc2019.Intcode.Interpreter
+      Aoc2019.Intcode.Interpreter.Default
+      Aoc2019.Intcode.Interpreter.DefaultStep
       Aoc2019.Intcode.Interpreter.Symbolic
       Aoc2019.Intcode.Programs
       Aoc2019.Intcode.Programs.D2
       Aoc2019.Intcode.Tape
+      Aoc2019.Intcode.Tmp.ExecTests
       Aoc2019.LinSys
       Aoc2019.Parsers
       Aoc2019.Utils
@@ -51,6 +56,31 @@ executable aoc2019-exe
     , base
     , containers
     , hmatrix
+    , lens
+    , megaparsec
+    , mtl
+    , text
+  default-language: Haskell2010
+
+test-suite spec
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Aoc2019.Intcode.Instruction.IntSpec
+      Paths_aoc2019
+  hs-source-dirs:
+      test
+  default-extensions:
+      OverloadedStrings
+      LambdaCase
+  build-tool-depends:
+      hspec-discover:hspec-discover
+  build-depends:
+      aoc2019
+    , base
+    , containers
+    , hmatrix
+    , hspec
     , lens
     , megaparsec
     , mtl
