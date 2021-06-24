@@ -68,7 +68,7 @@ stepBinop f im1 im2 om = do
         write (i1v `f` i2v)
         jump nextPos
         continue
-      RelMode -> error "unimplemented"
+      RelMode -> error "relmode yet unimplemented"
       ImmMode -> error "write parameter in immediate mode not allowed"
 
 -- | Get the value of a given parameter.
@@ -80,23 +80,25 @@ stepBinop f im1 im2 om = do
 -- naturally from the type:
 --
 --   * We need to return a symbol from the configured tape.
---   * We're given a pointer for the tape, a parameter mode, and the fact that
---     the tape symbol is the same as its index type (i.e. pointers are regular
---     data).
+--   * We're given a symbol from the tape, a parameter mode, and the fact that
+--     symbols and pointers are identical for this tape (i.e. pointers are
+--     regular data).
 --
--- We can retrieve the requested value in two ways: either grab another symbol
--- from the tape, or realise that the pointer we're given is a valid symbol
--- itself and return that. That decision is made by checking the parameter mode.
+-- We can retrieve the requested value in two ways: directly return the symbol
+-- argument, or use the symbol as a pointer to read another symbol from the
+-- tape. That decision is made by checking the parameter mode. For more
+-- complicated tapes which use more complex symbols, you may have to do more
+-- work to recover an index from your symbol (or it may be invalid).
 --
 -- Actually, yeah, this part deserves a write-up. This feels like the function I
 -- was aiming to write all along.
 getParamValue
     :: (MonadInterp m, InterpTape m ~ t, Num a, Symbol t ~ a, Index t ~ a)
-    => Index t -> ParamMode -> m (Symbol t)
+    => Symbol t -> ParamMode -> m (Symbol t)
 getParamValue sym = \case
   PosMode -> jump sym >> read
   ImmMode -> return sym
-  RelMode -> error "unimplemented"
+  RelMode -> error "relmode yet unimplemented"
 
 --------------------------------------------------------------------------------
 

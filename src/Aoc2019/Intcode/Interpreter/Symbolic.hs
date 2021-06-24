@@ -74,36 +74,31 @@ stepBinop f im1 im2 om = do
     i2 <- read
     next
     o  <- read
-    -- we read param modes then gather values in bulk, since if we gathered one
-    -- by one we'd have to jump around more
-    case i1 of
-      SymExp _     -> return $ StepErr ErrUnimplemented
-      SymConst i1' -> do
-        i1v <- getParamValue i1' im1
-        case i2 of
-          SymExp _     -> return $ StepErr ErrUnimplemented
-          SymConst i2' -> do
-            i2v <- getParamValue i2' im2
-            case o of
-              SymExp _    -> return $ StepErr ErrUnimplemented
-              SymConst o' -> do
-                case om of
-                  PosMode -> do
-                    jump o'
-                    write (i1v `f` i2v)
-                    jump nextPos
-                    continue
-                  RelMode -> error "unimplemented"
-                  ImmMode -> error "write parameter in immediate mode not allowed"
+    i1v <- getParamValue i1 im1
+    i2v <- getParamValue i2 im2
+    case o of
+      SymExp _    -> return $ StepErr ErrUnimplemented -- tried to write to expr
+      SymConst o' -> do
+        case om of
+          PosMode -> do
+            jump o'
+            write (i1v `f` i2v)
+            jump nextPos
+            continue
+          RelMode -> error "relmode yet unimplemented"
+          ImmMode -> error "write parameter in immediate mode not allowed"
 
 -- | TODO coolest fucking shit ever
 getParamValue
     :: (MonadInterp m, InterpTape m ~ t, Num a, Symbol t ~ Sym a, Index t ~ a)
-    => Index t -> ParamMode -> m (Symbol t)
+    => Symbol t -> ParamMode -> m (Symbol t)
 getParamValue sym = \case
-  PosMode -> jump sym >> read
-  ImmMode -> return (SymConst sym)
-  RelMode -> error "unimplemented"
+  PosMode ->
+    case sym of
+      SymConst ptr -> jump ptr >> read
+      SymExp _     -> error "unsure how to reference value at expr"
+  ImmMode -> return sym
+  RelMode -> error "unimplemented" -- TODO
 
 symAdd :: Sym Int -> Sym Int -> Sym Int
 symAdd (SymConst x) (SymConst y) = SymConst (x + y)
@@ -119,8 +114,8 @@ symMul (SymExp   x) (SymExp   y) = SymExp (mvarPolyMul x y)
 
 --------------------------------------------------------------------------------
 
-exProg :: [Sym Int]
-exProg =
+progSymEx :: [Sym Int]
+progSymEx =
   [ i 2,  i 13,  i 14, i 0
   , i 2,  i 0,   i 13, i 0
   , i 1,  i 0,   i 15, i 0

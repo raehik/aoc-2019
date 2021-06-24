@@ -1,25 +1,22 @@
-{-# LANGUAGE TypeFamilies #-}
-
-module Aoc2019.Intcode.Programs.D2 where
+module Aoc2019.Intcode.Programs.D2Symbolic where
 
 import           Prelude hiding (read)
 import           Aoc2019.Intcode.Interpreter.Symbolic
+import           Aoc2019.Intcode.Interpreter.Symbolic.MvarPoly
 import qualified Data.Map.Lazy as Map
-
-{-
 
 i :: a -> Sym a
 i = SymConst
 
 v :: Var -> Sym a
-v x = SymExp $ Map.fromList [(Map.fromList [(x, 1)], 1)]
+v x = SymExp $ MvarPoly $ Map.fromList [(Map.fromList [(x, 1)], 1)]
 
 -- | My day 2 program pre-parsed. TODO shouldn't be Sym, but I don't have orig
 --   lol.
 --
 -- My solution was noun=82 (->79), verb=26 (->23).
-d2p2Solved :: [Sym Int]
-d2p2Solved =
+progD2P2Solved :: [Sym Int]
+progD2P2Solved =
   [ i 1, i 82, i 26, i 3
   , i 1, i 1, i 2, i 3
   , i 1, i 3, i 4, i 3
@@ -56,8 +53,8 @@ d2p2Solved =
 -- | My day 2 program annotated with noun and verb variables.
 --
 -- My solution was noun=82 (->75), verb=26 (->19).
-d2Symbolic :: [Sym Int]
-d2Symbolic =
+progD2P2Symbolic :: [Sym Int]
+progD2P2Symbolic =
   [ i 1, v "noun", v "verb", i 3
   , i 1, i 1, i 2, i 3
   , i 1, i 3, i 4, i 3
@@ -90,5 +87,3 @@ d2Symbolic =
   , i 99
   , i 2, i 14, i 0 , i 0
   ]
-
--}

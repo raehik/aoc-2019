@@ -19,6 +19,8 @@ library
       Aoc2019.Intcode.Interpreter.Symbolic.MvarPoly
       Aoc2019.Intcode.Machine
       Aoc2019.Intcode.Programs
+      Aoc2019.Intcode.Programs.D2Symbolic
+      Aoc2019.Intcode.Programs.Symbolic
       Aoc2019.Intcode.Tape
       Aoc2019.Intcode.Tape.IntMap
       Aoc2019.Intcode.Tmp.ExecTests
