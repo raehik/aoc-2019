@@ -11,28 +11,28 @@ build-type:     Simple
 library
   exposed-modules:
       Aoc2019.D1
-      Aoc2019.Intcode.Instruction
-      Aoc2019.Intcode.Instruction.Int
-      Aoc2019.Intcode.Interpreter
-      Aoc2019.Intcode.Interpreter.Default
-      Aoc2019.Intcode.Interpreter.Symbolic
-      Aoc2019.Intcode.Interpreter.Symbolic.MvarPoly
-      Aoc2019.Intcode.Interpreter.SymTest
-      Aoc2019.Intcode.Machine
-      Aoc2019.Intcode.MachineSym
-      Aoc2019.Intcode.Programs
-      Aoc2019.Intcode.Programs.D2Symbolic
-      Aoc2019.Intcode.Programs.Symbolic
-      Aoc2019.Intcode.Tape
-      Aoc2019.Intcode.Tape.IntMap
-      Aoc2019.Intcode.Tape.IntMapFixedPoint
-      Aoc2019.Intcode.Tmp.ExecTests
-      Aoc2019.Intcode.Tmp.ExecTestsOld
-      Aoc2019.Intcode.Tmp.ExecTestsSymbolic
-      Aoc2019.Intcode.Tmp.ExecTestsSymbolic2
       Aoc2019.LinSys
       Aoc2019.Parsers
       Aoc2019.Utils
+      Intcode.Instruction
+      Intcode.Instruction.Int
+      Intcode.Interpreter
+      Intcode.Interpreter.Default
+      Intcode.Interpreter.Symbolic
+      Intcode.Interpreter.Symbolic.MvarPoly
+      Intcode.Interpreter.SymTest
+      Intcode.Machine
+      Intcode.MachineSym
+      Intcode.Programs
+      Intcode.Programs.D2Symbolic
+      Intcode.Programs.Symbolic
+      Intcode.Tape
+      Intcode.Tape.IntMap
+      Intcode.Tape.IntMapFixedPoint
+      Intcode.Tmp.ExecTests
+      Intcode.Tmp.ExecTestsOld
+      Intcode.Tmp.ExecTestsSymbolic
+      Intcode.Tmp.ExecTestsSymbolic2
   other-modules:
       Paths_aoc2019
   hs-source-dirs:
@@ -75,8 +75,8 @@ test-suite spec
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Aoc2019.Intcode.Instruction.IntSpec
-      Aoc2019.Intcode.Interpreter.Symbolic.MvarPolySpec
+      Intcode.Instruction.IntSpec
+      Intcode.Interpreter.Symbolic.MvarPolySpec
       Paths_aoc2019
   hs-source-dirs:
       test
