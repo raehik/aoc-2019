@@ -1,9 +1,9 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies    #-}
 
-module Intcode.Tape.IntMapFixedPoint where
+module Tapecode.Tape.IntMapFixedPoint where
 
-import           Intcode.Tape
+import           Tapecode.Tape
 
 import           Data.IntMap.Lazy (IntMap)
 import qualified Data.IntMap.Lazy as IntMap

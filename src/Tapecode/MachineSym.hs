@@ -6,13 +6,13 @@
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Intcode.MachineSym where
+module Tapecode.MachineSym where
 
 import           Prelude hiding (read)
 
-import           Intcode.Interpreter
-import           Intcode.Tape
-import           Intcode.Tape.IntMapFixedPoint
+import           Tapecode.Interpreter
+import           Tapecode.Tape
+import           Tapecode.Tape.IntMapFixedPoint
 import           Control.Monad.State.Lazy
 
 newtype IOTapeMachineFP t a = IOTapeMachineFP

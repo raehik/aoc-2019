@@ -1,6 +1,6 @@
-{-# LANGUAGE TypeFamilies    #-}
+{-# LANGUAGE TypeFamilies #-}
 
-module Intcode.Tape where
+module Tapecode.Tape where
 
 import           Data.Kind
 

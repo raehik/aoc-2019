@@ -1,20 +1,22 @@
 {-# LANGUAGE TypeFamilies #-}
 
-module Intcode.Interpreter.Default where
+module Tapecode.Intcode.Interpreter.Default where
 
 import           Prelude hiding (read)
 
-import           Intcode.Interpreter
-import           Intcode.Tape
-import qualified Intcode.Instruction.Int as Instr
-import           Intcode.Instruction.Int ( Instruction(..)
-                                                 , ParamMode(..)
-                                                 )
+import           Tapecode.Tape
+import           Tapecode.Interpreter
+import           Tapecode.Intcode.Interpreter
+import qualified Tapecode.Intcode.Instruction.Int as Instr
+import           Tapecode.Intcode.Instruction.Int ( Instruction(..)
+                                                  , ParamMode(..)
+                                                  )
 
 exec
     :: (MonadInterp m, InterpTape m ~ t, Integral a, Symbol t ~ a, Index t ~ a)
     => m Result
-exec = execWithStep step
+--exec = execWithStep step
+exec = execWithInstrHandler (return . Just) handleInstr
 
 -- | Execute a single machine step (run a single instruction).
 --

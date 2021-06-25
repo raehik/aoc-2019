@@ -1,8 +1,8 @@
-module Intcode.Tmp.ExecTests where
+module Tapecode.Intcode.Tmp.ExecTests where
 
-import           Intcode.Machine
-import           Intcode.Interpreter.Default
-import           Intcode.Tape.IntMap
+import           Tapecode.Machine
+import           Tapecode.Intcode.Interpreter.Default
+import           Tapecode.Tape.IntMap
 
 import           Control.Monad.State.Lazy
 

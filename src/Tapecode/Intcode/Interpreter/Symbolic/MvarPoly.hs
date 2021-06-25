@@ -1,8 +1,8 @@
-module Intcode.Interpreter.Symbolic.MvarPoly where
+module Tapecode.Intcode.Interpreter.Symbolic.MvarPoly where
 
 import           Prelude hiding (read)
 
-import           Aoc2019.Utils
+import           Utils
 import qualified Data.Map.Lazy as Map
 import           Data.Map.Lazy (Map)
 import qualified Data.Text.Lazy as Text

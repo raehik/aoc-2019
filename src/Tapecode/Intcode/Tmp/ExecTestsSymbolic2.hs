@@ -1,9 +1,9 @@
-module Intcode.Tmp.ExecTestsSymbolic2 where
+module Tapecode.Intcode.Tmp.ExecTestsSymbolic2 where
 
-import           Intcode.MachineSym
-import           Intcode.Interpreter.SymTest
-import           Intcode.Interpreter.Symbolic.MvarPoly
-import           Intcode.Tape.IntMapFixedPoint
+import           Tapecode.MachineSym
+import           Tapecode.Intcode.Interpreter.SymTest
+import           Tapecode.Intcode.Interpreter.Symbolic.MvarPoly
+import           Tapecode.Tape.IntMapFixedPoint
 
 import           Control.Monad.State.Lazy
 import qualified Data.Text.Lazy.IO as Text

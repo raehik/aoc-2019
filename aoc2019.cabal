@@ -13,26 +13,27 @@ library
       Aoc2019.D1
       Aoc2019.LinSys
       Aoc2019.Parsers
-      Aoc2019.Utils
-      Intcode.Instruction
-      Intcode.Instruction.Int
-      Intcode.Interpreter
-      Intcode.Interpreter.Default
-      Intcode.Interpreter.Symbolic
-      Intcode.Interpreter.Symbolic.MvarPoly
-      Intcode.Interpreter.SymTest
-      Intcode.Machine
-      Intcode.MachineSym
-      Intcode.Programs
-      Intcode.Programs.D2Symbolic
-      Intcode.Programs.Symbolic
-      Intcode.Tape
-      Intcode.Tape.IntMap
-      Intcode.Tape.IntMapFixedPoint
-      Intcode.Tmp.ExecTests
-      Intcode.Tmp.ExecTestsOld
-      Intcode.Tmp.ExecTestsSymbolic
-      Intcode.Tmp.ExecTestsSymbolic2
+      Tapecode.Intcode.Instruction
+      Tapecode.Intcode.Instruction.Int
+      Tapecode.Intcode.Interpreter
+      Tapecode.Intcode.Interpreter.Default
+      Tapecode.Intcode.Interpreter.Symbolic
+      Tapecode.Intcode.Interpreter.Symbolic.MvarPoly
+      Tapecode.Intcode.Interpreter.SymTest
+      Tapecode.Intcode.Programs
+      Tapecode.Intcode.Programs.D2Symbolic
+      Tapecode.Intcode.Programs.Symbolic
+      Tapecode.Intcode.Tmp.ExecTests
+      Tapecode.Intcode.Tmp.ExecTestsOld
+      Tapecode.Intcode.Tmp.ExecTestsSymbolic
+      Tapecode.Intcode.Tmp.ExecTestsSymbolic2
+      Tapecode.Interpreter
+      Tapecode.Machine
+      Tapecode.MachineSym
+      Tapecode.Tape
+      Tapecode.Tape.IntMap
+      Tapecode.Tape.IntMapFixedPoint
+      Utils
   other-modules:
       Paths_aoc2019
   hs-source-dirs:

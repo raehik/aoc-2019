@@ -16,18 +16,19 @@
 
 {-# LANGUAGE TypeFamilies #-}
 
-module Intcode.Interpreter.Symbolic where
+module Tapecode.Intcode.Interpreter.Symbolic where
 
 import           Prelude hiding (read)
 
-import           Intcode.Interpreter
-import           Intcode.Tape
-import qualified Intcode.Instruction.Int as Instr
-import           Intcode.Instruction.Int ( Instruction(..)
-                                                 , ParamMode(..)
-                                                 )
+import           Tapecode.Tape
+import           Tapecode.Interpreter
+import           Tapecode.Intcode.Interpreter
+import qualified Tapecode.Intcode.Instruction.Int as Instr
+import           Tapecode.Intcode.Instruction.Int ( Instruction(..)
+                                                  , ParamMode(..)
+                                                  )
 
-import           Intcode.Interpreter.Symbolic.MvarPoly
+import           Tapecode.Intcode.Interpreter.Symbolic.MvarPoly
 
 import qualified Data.Map.Lazy as Map
 

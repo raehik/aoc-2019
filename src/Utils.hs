@@ -1,4 +1,4 @@
-module Aoc2019.Utils where
+module Utils where
 
 import qualified Data.Text.Lazy as Text
 import           Data.Text.Lazy (Text)

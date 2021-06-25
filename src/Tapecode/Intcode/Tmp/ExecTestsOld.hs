@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeFamilies #-}
 
-module Intcode.Tmp.ExecTestsOld where
+module Tapecode.Intcode.Tmp.ExecTestsOld where
 
 {-
 import           Prelude hiding (read)

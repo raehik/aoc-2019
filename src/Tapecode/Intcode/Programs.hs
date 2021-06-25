@@ -1,4 +1,4 @@
-module Intcode.Programs where
+module Tapecode.Intcode.Programs where
 
 d2TestProgramLong :: [Int]
 d2TestProgramLong =

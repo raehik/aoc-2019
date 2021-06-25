@@ -1,18 +1,19 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE BangPatterns #-}
 
-module Intcode.Interpreter.SymTest where
+module Tapecode.Intcode.Interpreter.SymTest where
 
 import           Prelude hiding (read)
 
-import           Intcode.Interpreter
-import           Intcode.Tape.IntMapFixedPoint
-import qualified Intcode.Instruction.Int as Instr
-import           Intcode.Instruction.Int ( Instruction(..)
+import           Tapecode.Interpreter
+import           Tapecode.Intcode.Interpreter
+import           Tapecode.Tape.IntMapFixedPoint
+import qualified Tapecode.Intcode.Instruction.Int as Instr
+import           Tapecode.Intcode.Instruction.Int ( Instruction(..)
                                                  , ParamMode(..)
                                                  )
 
-import           Intcode.Interpreter.Symbolic.MvarPoly
+import           Tapecode.Intcode.Interpreter.Symbolic.MvarPoly
 
 import qualified Data.Map.Lazy as Map
 

@@ -5,8 +5,8 @@
 -- should we be handling 'Int's, or 'String'-likes? Both approaches work, and
 -- I'd be curious to know the overall space & time differences between them.
 
-module Intcode.Instruction
-  ( module Intcode.Instruction.Int
+module Tapecode.Intcode.Instruction
+  ( module Tapecode.Intcode.Instruction.Int
   ) where
 
-import           Intcode.Instruction.Int
+import           Tapecode.Intcode.Instruction.Int

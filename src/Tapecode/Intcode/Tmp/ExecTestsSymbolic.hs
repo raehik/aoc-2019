@@ -1,9 +1,9 @@
-module Intcode.Tmp.ExecTestsSymbolic where
+module Tapecode.Intcode.Tmp.ExecTestsSymbolic where
 
-import           Intcode.Machine
-import           Intcode.Interpreter.Symbolic
-import           Intcode.Interpreter.Symbolic.MvarPoly
-import           Intcode.Tape.IntMap
+import           Tapecode.Machine
+import           Tapecode.Intcode.Interpreter.Symbolic
+import           Tapecode.Intcode.Interpreter.Symbolic.MvarPoly
+import           Tapecode.Tape.IntMap
 
 import           Control.Monad.State.Lazy
 

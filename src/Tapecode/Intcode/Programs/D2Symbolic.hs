@@ -1,8 +1,8 @@
-module Intcode.Programs.D2Symbolic where
+module Tapecode.Intcode.Programs.D2Symbolic where
 
 import           Prelude hiding (read)
-import           Intcode.Interpreter.Symbolic
-import           Intcode.Interpreter.Symbolic.MvarPoly
+import           Tapecode.Intcode.Interpreter.Symbolic
+import           Tapecode.Intcode.Interpreter.Symbolic.MvarPoly
 import qualified Data.Map.Lazy as Map
 
 i :: a -> Sym a

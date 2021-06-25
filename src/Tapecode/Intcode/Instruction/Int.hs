@@ -6,7 +6,7 @@
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE FlexibleInstances #-}
 
-module Intcode.Instruction.Int
+module Tapecode.Intcode.Instruction.Int
   ( Error(..)
   , Instruction(..)
   , ParamMode(..)

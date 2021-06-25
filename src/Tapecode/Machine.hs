@@ -1,16 +1,16 @@
--- | Concrete Intcode machine to execute supported interpreters.
+-- | Concrete Tapecode machine to execute supported interpreters.
 
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Intcode.Machine where
+module Tapecode.Machine where
 
 import           Prelude hiding (read)
 
-import           Intcode.Interpreter
-import           Intcode.Tape
+import           Tapecode.Tape
+import           Tapecode.Interpreter
 import           Control.Monad.State.Lazy
 
 newtype IOTapeMachine t a = IOTapeMachine
