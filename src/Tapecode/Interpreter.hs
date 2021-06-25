@@ -17,6 +17,7 @@ import           Prelude hiding (read)
 
 import           Data.Kind
 import           Tapecode.Tape
+--import           Control.Lens (ALens')
 
 -- | A 'MonadInterp' instance is a monad with an associated 'Tape'. Tapes are
 -- pure stateful-esque data structures with a consistent interface to allow
@@ -34,3 +35,6 @@ class (Monad m, Tape (InterpTape m)) => MonadInterp m where
     moveLeftmost  :: m ()
     moveRightmost :: m ()
     fullTape :: m (InterpTape m)
+    --anno :: m (ALens' (InterpTape m) (TapeAnno (InterpTape m)))
+    annoGet :: m (TapeAnno (InterpTape m))
+    annoSet :: TapeAnno (InterpTape m) -> m ()

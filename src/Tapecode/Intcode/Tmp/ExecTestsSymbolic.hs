@@ -9,7 +9,7 @@ import           Control.Monad.State.Lazy
 
 tmpExecSymProg :: [Sym Int] -> IO ()
 tmpExecSymProg prog = do
-    let initState = fromListToIdxIntMap prog
+    let initState = fromListToIdxIntMap 0 prog
     (result, endState) <- runStateT (runIOTapeMachine exec) initState
     print result
     let tapeOut = idxIntMapTape endState

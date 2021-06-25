@@ -22,20 +22,19 @@ newtype IOTapeMachine t a = IOTapeMachine
              , MonadState t
              )
 
---updateTapeOrContinueWithIOLog :: (MonadIO m, MonadInterp m) => Maybe (InterpTape m) -> m ()
-updateTapeOrContinueWithIOLog :: Maybe (InterpTape (IOTapeMachine t)) -> IOTapeMachine t ()
-updateTapeOrContinueWithIOLog = \case
-  Nothing    -> liftIO $ putStrLn "program error, ignoring"
+updateTapeOrContinueWithIOLog :: String -> Maybe (InterpTape (IOTapeMachine t)) -> IOTapeMachine t ()
+updateTapeOrContinueWithIOLog msg = \case
+  Nothing    -> liftIO $ putStrLn $ "ignoring program error: " <> msg
   Just tape' -> put tape'
 
 instance Tape t => MonadInterp (IOTapeMachine t) where
     type InterpTape (IOTapeMachine t) = t
-    next = get >>= updateTapeOrContinueWithIOLog . tapeNext
-    prev = get >>= updateTapeOrContinueWithIOLog . tapePrev
-    read = get >>= return . tapeRead
+    next = get >>= updateTapeOrContinueWithIOLog "right end of tape" . tapeNext
+    prev = get >>= updateTapeOrContinueWithIOLog "left end of tape" . tapePrev
+    read = tapeRead <$> get
     write a = modify (tapeWrite a)
-    readPos = get >>= return . tapePos
-    jump idx = get >>= updateTapeOrContinueWithIOLog . tapeJump idx
+    readPos = tapePos <$> get
+    jump idx = get >>= updateTapeOrContinueWithIOLog "jumped off tape" . tapeJump idx
 
     -- TODO: This is where the efficiency starts to break down, and we need to
     -- start writing more concrete instances with type Index t = Index, and
@@ -52,3 +51,5 @@ instance Tape t => MonadInterp (IOTapeMachine t) where
           Just tape' -> put tape' >> moveRightmost
 
     fullTape = get
+    annoGet = tapeAnnoGet <$> get
+    annoSet = modify . tapeAnnoSet

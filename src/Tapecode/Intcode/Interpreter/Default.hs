@@ -20,7 +20,7 @@ import           Tapecode.Intcode.Instruction.Int ( Instruction(..)
 import           Control.Monad.IO.Class
 
 exec
-    :: (MonadInterp m, MonadIO m, InterpTape m ~ t, Integral a, Symbol t ~ a, Index t ~ a, Read a, Show a)
+    :: (MonadInterp m, MonadIO m, InterpTape m ~ t, Integral a, Symbol t ~ a, Index t ~ a, Read a, Show a, TapeAnno t ~ a)
     => m Result
 --exec = execWithStep step
 exec = execWithInstrHandler (return . Just) handleInstr
@@ -32,7 +32,7 @@ exec = execWithInstrHandler (return . Just) handleInstr
 -- compatible with the tape index to handle jumps. Essentially, we ask that the
 -- tape is a single von Neumann-style "bus" (code and data look the same).
 step
-    :: (MonadInterp m, MonadIO m, InterpTape m ~ t, Integral a, Symbol t ~ a, Index t ~ a, Read a, Show a)
+    :: (MonadInterp m, MonadIO m, InterpTape m ~ t, Integral a, Symbol t ~ a, Index t ~ a, Read a, Show a, TapeAnno t ~ a)
     => m Step
 step = do
     sym <- read
@@ -47,7 +47,7 @@ step = do
 -- the Integral requirement here down to a Num instead. Hooray for pointlessly
 -- polymorphic code!
 handleInstr
-    :: (MonadInterp m, MonadIO m, InterpTape m ~ t, Num a, Symbol t ~ a, Index t ~ a, Read a, Show a, Eq a, Ord a)
+    :: (MonadInterp m, MonadIO m, InterpTape m ~ t, Num a, Symbol t ~ a, Index t ~ a, Read a, Show a, Eq a, Ord a, TapeAnno t ~ a)
     => Instruction ParamMode -> m Step
 handleInstr = \case
   Add im1 im2 om -> opStep $ opBinOp (+) im1 im2 om
@@ -67,8 +67,18 @@ handleInstr = \case
   Jz  im1 im2    -> opStep $ opJumpIf (== 0) im1 im2
   Lt  im1 im2 om -> opStep $ opCompare (<)  im1 im2 om
   Eq  im1 im2 om -> opStep $ opCompare (==) im1 im2 om
+  Arb im         -> opStep $ do
+    curPos <- readPos
+    let nextPos = curPos + 2
+    next
+    i <- read
+    iv <- getParamValue im i
+    anno <- annoGet
+    let anno' = anno + iv
+    liftIO $ putStrLn $ "setting new anno: " <> show anno'
+    annoSet anno'
+    jump nextPos
   Hlt            -> return StepHalt
-  _              -> return $ StepErr ErrUnimplemented
 
 -- | Run a "safe" action (can't return a 'Step') and return the default
 --   "continue" step.
@@ -86,13 +96,13 @@ opIO action = do
     jump nextPos
 
 opCompare
-    :: (MonadInterp m, InterpTape m ~ t, Num a, Symbol t ~ a, Index t ~ a)
+    :: (MonadInterp m, InterpTape m ~ t, Num a, Symbol t ~ a, Index t ~ a, TapeAnno t ~ a)
     => (Symbol t -> Symbol t -> Bool)
     -> ParamMode -> ParamMode -> ParamMode -> m ()
 opCompare test = opBinOp $ \sym1 sym2 -> if sym1 `test` sym2 then 1 else 0
 
 opBinOp
-    :: (MonadInterp m, InterpTape m ~ t, Num a, Symbol t ~ a, Index t ~ a)
+    :: (MonadInterp m, InterpTape m ~ t, Num a, Symbol t ~ a, Index t ~ a, TapeAnno t ~ a)
     => (Symbol t -> Symbol t -> Symbol t)
     -> ParamMode -> ParamMode -> ParamMode -> m ()
 opBinOp f im1 im2 om = do
@@ -113,11 +123,15 @@ opBinOp f im1 im2 om = do
         jump o
         write (i1v `f` i2v)
         jump nextPos
-      RelMode -> error "relmode yet unimplemented"
+      RelMode -> do
+        rbo <- annoGet
+        jump (rbo + o)
+        write (i1v `f` i2v)
+        jump nextPos
       ImmMode -> error "write parameter in immediate mode not allowed"
 
 opJumpIf
-    :: (MonadInterp m, InterpTape m ~ t, Num a, Symbol t ~ a, Index t ~ a)
+    :: (MonadInterp m, InterpTape m ~ t, Num a, Symbol t ~ a, Index t ~ a, TapeAnno t ~ a)
     => (Symbol t -> Bool) -> ParamMode -> ParamMode -> m ()
 opJumpIf test im1 im2 = do
     curPos <- readPos
@@ -153,13 +167,16 @@ opJumpIf test im1 im2 = do
 -- Actually, yeah, this part deserves a write-up. This feels like the function I
 -- was aiming to write all along.
 getParamValue
-    :: (MonadInterp m, InterpTape m ~ t, Num a, Symbol t ~ a, Index t ~ a)
+    :: (MonadInterp m, InterpTape m ~ t, Num a, Symbol t ~ a, Index t ~ a, TapeAnno t ~ a)
     => ParamMode -> Symbol t -> m (Symbol t)
 getParamValue pm sym =
     case pm of
       PosMode -> jump sym >> read
       ImmMode -> return sym
-      RelMode -> error "relmode yet unimplemented"
+      RelMode -> do
+        rbo <- annoGet
+        jump (rbo + sym)
+        read
 
 --------------------------------------------------------------------------------
 
@@ -168,7 +185,7 @@ getParamValue pm sym =
 --
 -- TODO: move later. Also, probably edit to do an post-Output.
 execD2
-    :: (MonadInterp m, MonadIO m, InterpTape m ~ t, Integral a, Symbol t ~ a, Index t ~ a, Read a, Show a)
+    :: (MonadInterp m, MonadIO m, InterpTape m ~ t, Integral a, Symbol t ~ a, Index t ~ a, Read a, Show a, TapeAnno t ~ a)
     => m Result
 execD2 = do
     next
