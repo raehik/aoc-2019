@@ -37,7 +37,6 @@ instance Tape (IdxIntMapFP a) where
         then Just (IdxIntMapFP m jmp len)
         else Nothing
     tapePos = view iimfpPtr
-    tapeFull = id
 
 fromListToIdxIntMapFP :: [a] -> IdxIntMapFP a
 fromListToIdxIntMapFP = go 0 IntMap.empty

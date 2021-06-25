@@ -13,6 +13,3 @@ class Tape t where
     tapeWrite :: Symbol t -> t -> t
     tapeJump  :: Index t -> t -> Maybe t
     tapePos   :: t -> Index t
-
-    -- TODO testing...
-    tapeFull  :: t -> t

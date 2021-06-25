@@ -53,4 +53,4 @@ instance MonadInterp (IOTapeMachineFP t) where
           Nothing    -> return ()
           Just tape' -> put tape' >> moveRightmost
 
-    fullTape = get >>= return . tapeFull
+    fullTape = get
