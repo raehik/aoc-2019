@@ -12,6 +12,7 @@ module Aoc2019.Intcode.Instruction.Int
   , ParamMode(..)
   , decode
   , encode
+  , defaultParamMode
   ) where
 
 data Error

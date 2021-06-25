@@ -11,14 +11,14 @@ import           Control.Lens hiding (Index)
 import           Data.Maybe (fromJust)
 
 data IdxIntMapFP a = IdxIntMapFP
-  { _iimfpMap :: IntMap (Either (IdxIntMapFP a) a)
+  { _iimfpMap :: IntMap (Either (a, IdxIntMapFP a) a)
   , _iimfpPtr :: Int
   , _iimfpLen :: Int
   } deriving (Eq, Ord, Show)
 $(makeLenses ''IdxIntMapFP)
 
 instance Tape (IdxIntMapFP a) where
-    type Symbol (IdxIntMapFP a) = Either (IdxIntMapFP a) a
+    type Symbol (IdxIntMapFP a) = Either (a, IdxIntMapFP a) a
     type Index (IdxIntMapFP a) = Int
     tapeNext (IdxIntMapFP m ptr len) =
         if   ptr' <= len
@@ -37,6 +37,7 @@ instance Tape (IdxIntMapFP a) where
         then Just (IdxIntMapFP m jmp len)
         else Nothing
     tapePos = view iimfpPtr
+    tapeFull = id
 
 fromListToIdxIntMapFP :: [a] -> IdxIntMapFP a
 fromListToIdxIntMapFP = go 0 IntMap.empty

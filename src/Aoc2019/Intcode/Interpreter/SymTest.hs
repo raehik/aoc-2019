@@ -1,4 +1,5 @@
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE BangPatterns #-}
 
 module Aoc2019.Intcode.Interpreter.SymTest where
 
@@ -21,7 +22,7 @@ data Sym
   | SymExp (MvarPoly Var Int Int)
     deriving (Eq, Ord, Show)
 
-type Sym' = Either (IdxIntMapFP Sym) Sym
+type Sym' = Either (Sym, IdxIntMapFP Sym) Sym
 
 exec
     :: (MonadInterp m, InterpTape m ~ IdxIntMapFP Sym)
@@ -52,8 +53,8 @@ handleInstr
     :: (MonadInterp m, InterpTape m ~ IdxIntMapFP Sym)
     => Instruction ParamMode -> m Step
 handleInstr = \case
-  Add im1 im2 om -> stepBinop symAdd im1 im2 om
-  Mul im1 im2 om -> stepBinop symMul im1 im2 om
+  Add im1 im2 om -> stepBinop sym'Add im1 im2 om
+  Mul im1 im2 om -> stepBinop sym'Mul im1 im2 om
   Hlt            -> return StepHalt
   _              -> return $ StepErr ErrUnimplemented
 
@@ -85,7 +86,8 @@ stepBinop f im1 im2 om = do
             case om of
               PosMode -> do
                 jump o''
-                write (i1v `f` i2v)
+                let outval = i1v `f` i2v
+                write outval
                 jump nextPos
                 continue
               RelMode -> error "relmode yet unimplemented"
@@ -94,69 +96,63 @@ stepBinop f im1 im2 om = do
 getParamValue
     :: (MonadInterp m, InterpTape m ~ IdxIntMapFP Sym)
     => Sym' -> ParamMode -> m Sym'
-getParamValue sym _ = return sym
-{-
-    \case
+getParamValue sym = \case
   PosMode ->
     case sym of
-      SymPlain val ->
-        case val of
-          ValConst ptr -> jump ptr >> read
-          ValExp _     -> return $ SymSnapshot val sym
-      SymSnapshot val _ ->
-        case val of
-          ValConst ptr -> jump ptr >> read -- TODO: is this reachable?
-          ValExp _     -> error "attempted to use expr snapshot as position"
+      Left _ -> error "attempted to use recursive tape as position"
+      Right sym' ->
+        case sym' of
+          SymExp expr -> do
+            t <- fullTape
+            return $ Left (SymExp expr, t)
+          SymConst ptr -> jump ptr >> read
   ImmMode -> return sym
   RelMode -> error "unimplemented" -- TODO
--}
 
 -- TODO
-symAdd :: Either (IdxIntMapFP Sym) Sym -> Either (IdxIntMapFP Sym) Sym -> Either (IdxIntMapFP Sym) Sym
-symAdd x _ = x
+-- shouldn't matter which we pick when adding? maybe?
+sym'Add :: Sym' -> Sym' -> Sym'
+sym'Add (Right x) (Right y) = Right $ symAdd x y
+sym'Add (Right x) (Left (yexp, y)) = Left (symAdd x yexp, y)
+sym'Add x@(Left _) y@(Right _) = sym'Add y x
+sym'Add (Left (xexp, x)) (Left (yexp, _)) = Left (symAdd xexp yexp, x)
 
-symMul :: Either (IdxIntMapFP Sym) Sym -> Either (IdxIntMapFP Sym) Sym -> Either (IdxIntMapFP Sym) Sym
-symMul x _ = x
+sym'Mul :: Sym' -> Sym' -> Sym'
+sym'Mul (Right x) (Right y) = Right $ symMul x y
+sym'Mul (Right x) (Left (yexp, y)) = Left (symMul x yexp, y)
+sym'Mul x@(Left _) y@(Right _) = sym'Mul y x
+sym'Mul (Left (xexp, x)) (Left (yexp, _)) = Left (symMul xexp yexp, x)
+
+symAdd :: Sym -> Sym -> Sym
+symAdd (SymConst x) (SymConst y) = SymConst (x + y)
+symAdd (SymConst x)           y  = symAdd (SymExp (mvarConstExpr x)) y
+symAdd           x  (SymConst y) = symAdd x (SymExp (mvarConstExpr y))
+symAdd (SymExp   x) (SymExp   y) = SymExp (mvarPolyAdd x y)
+
+symMul :: Sym -> Sym -> Sym
+symMul (SymConst x) (SymConst y) = SymConst (x * y)
+symMul (SymConst x)           y  = symMul (SymExp (mvarConstExpr x)) y
+symMul           x  (SymConst y) = symMul x (SymExp (mvarConstExpr y))
+symMul (SymExp   x) (SymExp   y) = SymExp (mvarPolyMul x y)
+
 
 --------------------------------------------------------------------------------
 
-{-
-tmpSymtestProgTestImm :: [Sym t]
-tmpSymtestProgTestImm = map SymPlain
-  [ i 1101, v "noun", v "verb", i 0
-  , i 99
-  , i 5, i 6, i 7, i 8, i 9
-  ]
-  where
-    i   = ValConst
-    v x = ValExp $ MvarPoly $ Map.fromList [(Map.fromList [(x, 1)], 1)]
+i   = SymConst
+v x = SymExp $ MvarPoly $ Map.fromList [(Map.fromList [(x, 1)], 1)]
 
-tmpSymtestProgTestPos :: [Sym t]
-tmpSymtestProgTestPos = map SymPlain
-  [ i 0001, v "noun", v "verb", i 0
+tmpSymtestProgTestMiniD2 :: [Sym]
+tmpSymtestProgTestMiniD2 =
+  [ i 1, v "noun", v "verb", i 0
+  , i 1, i 0, i 9, i 0
   , i 99
-  , i 5, i 6, i 7, i 8, i 9
+  , i 2
   ]
-  where
-    i   = ValConst
-    v x = ValExp $ MvarPoly $ Map.fromList [(Map.fromList [(x, 1)], 1)]
-tmpSymtestProgTestImm :: [Sym t]
-tmpSymtestProgTestImm = map SymPlain
-  [ i 1101, v "noun", v "verb", i 0
-  , i 99
-  , i 5, i 6, i 7, i 8, i 9
-  ]
-  where
-    i   = ValConst
-    v x = ValExp $ MvarPoly $ Map.fromList [(Map.fromList [(x, 1)], 1)]
 
-tmpSymtestProgTestPos :: [Sym t]
-tmpSymtestProgTestPos = map SymPlain
-  [ i 0001, v "noun", v "verb", i 0
+tmpSymtestProgTestMiniD2Shorter :: [Sym]
+tmpSymtestProgTestMiniD2Shorter =
+  [ i 1, v "noun", v "verb", i 0
+  , i 2, i 0, i 9, i 0
   , i 99
-  , i 5, i 6, i 7, i 8, i 9
+  , i 2
   ]
-  where
-    i   = ValConst
-    v x = ValExp $ MvarPoly $ Map.fromList [(Map.fromList [(x, 1)], 1)]
--}

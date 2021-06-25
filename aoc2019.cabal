@@ -76,6 +76,7 @@ test-suite spec
   main-is: Spec.hs
   other-modules:
       Aoc2019.Intcode.Instruction.IntSpec
+      Aoc2019.Intcode.Interpreter.Symbolic.MvarPolySpec
       Paths_aoc2019
   hs-source-dirs:
       test

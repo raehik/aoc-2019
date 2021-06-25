@@ -51,8 +51,6 @@ progD2P2Solved =
   ]
 
 -- | My day 2 program annotated with noun and verb variables.
---
--- My solution was noun=82 (->75), verb=26 (->19).
 progD2P2Symbolic :: [Sym Int]
 progD2P2Symbolic =
   [ i 1, v "noun", v "verb", i 3

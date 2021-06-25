@@ -25,6 +25,9 @@ class (Monad m, Tape (InterpTape m)) => MonadInterp m where
     moveLeftmost  :: m ()
     moveRightmost :: m ()
 
+    -- TODO testing...
+    fullTape :: m (InterpTape m)
+
 data Error
   = ErrInstructionErr Instr.Error
   | ErrUnimplemented

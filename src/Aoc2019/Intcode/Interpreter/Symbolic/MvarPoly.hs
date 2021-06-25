@@ -5,6 +5,7 @@ import           Prelude hiding (read)
 import           Aoc2019.Utils
 import qualified Data.Map.Lazy as Map
 import           Data.Map.Lazy (Map)
+import qualified Data.Text.Lazy as Text
 import           Data.Text.Lazy (Text)
 import           Data.Text.Lazy.Builder
 
@@ -21,7 +22,13 @@ type Var = Text
 -- This is most certainly not all that efficient, but I'm stupid, thus care not.
 -- It gets me what I want in a very simple and clean manner.
 newtype MvarPoly v a b = MvarPoly { unMvarPoly :: Map (Map v b) a }
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord)
+
+instance (Show v, Show a, Show b, Ord v, Ord a, Eq b, Num a, Num b) => Show (MvarPoly v a b) where
+    show m =
+        case mvarPolyExpr m of
+          Nothing   -> "<empty expr>"
+          Just expr -> "(" <> Text.unpack expr <> ")"
 
 -- | Multiply two numeric 'MvarPoly's together. Does not attempt to retain
 --   normal form.
@@ -40,15 +47,6 @@ mvarPolyMul (MvarPoly mL) (MvarPoly mR) = MvarPoly $ Map.foldrWithKey go Map.emp
 mvarPolyAdd :: (Ord v, Ord b, Num a, Num b) => MvarPoly v a b -> MvarPoly v a b -> MvarPoly v a b
 mvarPolyAdd (MvarPoly mL) (MvarPoly mR) = MvarPoly $ Map.unionWith (+) mL mR
 
-data Sign
-  = SignPos
-  | SignNeg
-
-pprintSign :: Sign -> Text
-pprintSign = \case
-  SignPos -> "+"
-  SignNeg -> "-"
-
 -- Takes an MvarPoly in normal form (no 0 coeffs, no 0 powers). Will print
 -- "superfluous" terms if not in normal form. (Does handle empty expressions,
 -- however, since we need to for good sign behaviour anyway.)
@@ -56,6 +54,10 @@ pprintSign = \case
 mvarPolyExpr :: (Ord v, Ord a, Num a, Eq b, Num b, Show v, Show a, Show b) => MvarPoly v a b -> Maybe Text
 mvarPolyExpr = mvarPolyExpr' tshow
 
+mvarConstExpr :: a -> MvarPoly v a b
+mvarConstExpr x = MvarPoly (Map.singleton Map.empty x)
+
+-- TODO: due to coeff == 1 check, the plain val won't print if it's 1 lol
 mvarPolyExpr'
     :: (Ord v, Ord a, Num a, Eq b, Num b, Show a, Show b)
     => (v -> Text) -> MvarPoly v a b -> Maybe Text
@@ -77,3 +79,12 @@ mvarPolyExpr' textify (MvarPoly m) =
     buildPolyPart var pwr bld
       | pwr == 1  = bld <> fromLazyText (textify var)
       | otherwise = bld <> fromLazyText (textify var) <> "^" <> fromLazyText (tshow pwr)
+
+data Sign
+  = SignPos
+  | SignNeg
+
+pprintSign :: Sign -> Text
+pprintSign = \case
+  SignPos -> "+"
+  SignNeg -> "-"
