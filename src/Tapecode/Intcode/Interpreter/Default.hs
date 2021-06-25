@@ -1,3 +1,9 @@
+-- | Default Intcode interpreter: tape symbol is Int (actually loosened to
+--   Integral a), tape index is identical to symbol.
+--
+-- See 'Tapecode.Intcode.Interpreter' for the high-level interpreter
+-- specification (steps).
+
 {-# LANGUAGE TypeFamilies #-}
 
 module Tapecode.Intcode.Interpreter.Default where
@@ -11,9 +17,10 @@ import qualified Tapecode.Intcode.Instruction.Int as Instr
 import           Tapecode.Intcode.Instruction.Int ( Instruction(..)
                                                   , ParamMode(..)
                                                   )
+import           Control.Monad.IO.Class
 
 exec
-    :: (MonadInterp m, InterpTape m ~ t, Integral a, Symbol t ~ a, Index t ~ a)
+    :: (MonadInterp m, MonadIO m, InterpTape m ~ t, Integral a, Symbol t ~ a, Index t ~ a, Read a, Show a)
     => m Result
 --exec = execWithStep step
 exec = execWithInstrHandler (return . Just) handleInstr
@@ -25,7 +32,7 @@ exec = execWithInstrHandler (return . Just) handleInstr
 -- compatible with the tape index to handle jumps. Essentially, we ask that the
 -- tape is a single von Neumann-style "bus" (code and data look the same).
 step
-    :: (MonadInterp m, InterpTape m ~ t, Integral a, Symbol t ~ a, Index t ~ a)
+    :: (MonadInterp m, MonadIO m, InterpTape m ~ t, Integral a, Symbol t ~ a, Index t ~ a, Read a, Show a)
     => m Step
 step = do
     sym <- read
@@ -35,23 +42,60 @@ step = do
 
 -- | Handle an Intcode instruction.
 --
--- Since Intcode supports only minimal numeric operations, we're able to drop
+-- Since Intcode supports only minimal numeric operations and we've already
+-- parsed the Intcode opcode (which requires an Integral), we're able to drop
 -- the Integral requirement here down to a Num instead. Hooray for pointlessly
 -- polymorphic code!
 handleInstr
-    :: (MonadInterp m, InterpTape m ~ t, Num a, Symbol t ~ a, Index t ~ a)
+    :: (MonadInterp m, MonadIO m, InterpTape m ~ t, Num a, Symbol t ~ a, Index t ~ a, Read a, Show a, Eq a, Ord a)
     => Instruction ParamMode -> m Step
 handleInstr = \case
-  Add im1 im2 om -> stepBinop (+) im1 im2 om
-  Mul im1 im2 om -> stepBinop (*) im1 im2 om
+  Add im1 im2 om -> opStep $ opBinOp (+) im1 im2 om
+  Mul im1 im2 om -> opStep $ opBinOp (*) im1 im2 om
+  In  im         -> opStep $ opIO $ do
+    liftIO $ putStr "INPUT: "
+    input <- liftIO readLn
+    case im of
+      PosMode -> next >> read >>= jump >> write input
+      ImmMode -> error "program error: write to immmode invalid"
+      RelMode -> error "write to relmode unimplemented"
+  Out im         -> opStep $ opIO $ do
+    next
+    iv <- read >>= getParamValue im
+    liftIO $ print iv
+  Jnz im1 im2    -> opStep $ opJumpIf (/= 0) im1 im2
+  Jz  im1 im2    -> opStep $ opJumpIf (== 0) im1 im2
+  Lt  im1 im2 om -> opStep $ opCompare (<)  im1 im2 om
+  Eq  im1 im2 om -> opStep $ opCompare (==) im1 im2 om
   Hlt            -> return StepHalt
   _              -> return $ StepErr ErrUnimplemented
 
-stepBinop
+-- | Run a "safe" action (can't return a 'Step') and return the default
+--   "continue" step.
+opStep :: Monad m => m () -> m Step
+opStep action = action >> continue
+
+-- | Run an IO action, then jump 2 positions ahead from initial execution.
+opIO
+    :: (MonadInterp m, MonadIO m, InterpTape m ~ t, Num a, Index t ~ a)
+    => m () -> m ()
+opIO action = do
+    curPos <- readPos
+    let nextPos = curPos + 2
+    action
+    jump nextPos
+
+opCompare
+    :: (MonadInterp m, InterpTape m ~ t, Num a, Symbol t ~ a, Index t ~ a)
+    => (Symbol t -> Symbol t -> Bool)
+    -> ParamMode -> ParamMode -> ParamMode -> m ()
+opCompare test = opBinOp $ \sym1 sym2 -> if sym1 `test` sym2 then 1 else 0
+
+opBinOp
     :: (MonadInterp m, InterpTape m ~ t, Num a, Symbol t ~ a, Index t ~ a)
     => (Symbol t -> Symbol t -> Symbol t)
-    -> ParamMode -> ParamMode -> ParamMode -> m Step
-stepBinop f im1 im2 om = do
+    -> ParamMode -> ParamMode -> ParamMode -> m ()
+opBinOp f im1 im2 om = do
     curPos <- readPos
     let nextPos = curPos + 4
     next
@@ -62,16 +106,30 @@ stepBinop f im1 im2 om = do
     o  <- read
     -- we read param modes then gather values in bulk, since if we gathered one
     -- by one we'd have to jump around more
-    i1v <- getParamValue i1 im1
-    i2v <- getParamValue i2 im2
+    i1v <- getParamValue im1 i1
+    i2v <- getParamValue im2 i2
     case om of
       PosMode -> do
         jump o
         write (i1v `f` i2v)
         jump nextPos
-        continue
       RelMode -> error "relmode yet unimplemented"
       ImmMode -> error "write parameter in immediate mode not allowed"
+
+opJumpIf
+    :: (MonadInterp m, InterpTape m ~ t, Num a, Symbol t ~ a, Index t ~ a)
+    => (Symbol t -> Bool) -> ParamMode -> ParamMode -> m ()
+opJumpIf test im1 im2 = do
+    curPos <- readPos
+    let nextPos = curPos + 3
+    next
+    i1 <- read
+    next
+    i2 <- read
+    i1v <- getParamValue im1 i1
+    if   test i1v
+    then getParamValue im2 i2 >>= jump
+    else jump nextPos
 
 -- | Get the value of a given parameter.
 --
@@ -96,11 +154,12 @@ stepBinop f im1 im2 om = do
 -- was aiming to write all along.
 getParamValue
     :: (MonadInterp m, InterpTape m ~ t, Num a, Symbol t ~ a, Index t ~ a)
-    => Symbol t -> ParamMode -> m (Symbol t)
-getParamValue sym = \case
-  PosMode -> jump sym >> read
-  ImmMode -> return sym
-  RelMode -> error "relmode yet unimplemented"
+    => ParamMode -> Symbol t -> m (Symbol t)
+getParamValue pm sym =
+    case pm of
+      PosMode -> jump sym >> read
+      ImmMode -> return sym
+      RelMode -> error "relmode yet unimplemented"
 
 --------------------------------------------------------------------------------
 
@@ -109,7 +168,7 @@ getParamValue sym = \case
 --
 -- TODO: move later. Also, probably edit to do an post-Output.
 execD2
-    :: (MonadInterp m, InterpTape m ~ t, Integral a, Symbol t ~ a, Index t ~ a)
+    :: (MonadInterp m, MonadIO m, InterpTape m ~ t, Integral a, Symbol t ~ a, Index t ~ a, Read a, Show a)
     => m Result
 execD2 = do
     next

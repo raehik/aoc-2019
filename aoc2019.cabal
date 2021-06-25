@@ -22,6 +22,7 @@ library
       Tapecode.Intcode.Interpreter.SymTest
       Tapecode.Intcode.Programs
       Tapecode.Intcode.Programs.D2Symbolic
+      Tapecode.Intcode.Programs.D5
       Tapecode.Intcode.Programs.Symbolic
       Tapecode.Intcode.Tmp.ExecTests
       Tapecode.Intcode.Tmp.ExecTestsOld
