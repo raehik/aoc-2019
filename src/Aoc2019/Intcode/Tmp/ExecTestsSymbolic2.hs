@@ -5,22 +5,15 @@ import           Aoc2019.Intcode.Interpreter.SymTest
 import           Aoc2019.Intcode.Interpreter.Symbolic.MvarPoly
 import           Aoc2019.Intcode.Tape.IntMapFixedPoint
 
-import           Aoc2019.Utils
-
 import           Control.Monad.State.Lazy
-import qualified Data.Text.Lazy as Text
 import qualified Data.Text.Lazy.IO as Text
-import qualified Data.Map.Lazy as Map
-
-import           Aoc2019.Intcode.Interpreter
 
 tmpExecSymtestProg :: [Sym] -> IO ()
 tmpExecSymtestProg prog = do
     let initState = fromListToIdxIntMapFP prog
     (result, endState) <- runStateT (runIOTapeMachineFP exec) initState
     print result
-    let tapeIn  = idxIntMapFPTape initState
-        tapeOut = idxIntMapFPTape endState
+    let tapeOut = idxIntMapFPTape endState
         tapeOutIdx0 = head tapeOut
         SymExp tmp = tapeOutIdx0
         Just tmp' = mvarPolyExpr' id tmp
@@ -32,7 +25,7 @@ tmpExecSymtestProg prog = do
 tmpExecSymtestProg' :: [Sym] -> IO (IdxIntMapFP Sym)
 tmpExecSymtestProg' prog = do
     let initState = fromListToIdxIntMapFP prog
-    (result, endState) <- runStateT (runIOTapeMachineFP exec) initState
+    (_, endState) <- runStateT (runIOTapeMachineFP exec) initState
     return endState
 
 --------------------------------------------------------------------------------
@@ -71,9 +64,6 @@ progD2P2Symbolic' =
   , i 99
   , i 2, i 14, i 0 , i 0
   ]
-  where
-    i   = SymConst
-    v x = SymExp $ MvarPoly $ Map.fromList [(Map.fromList [(x, 1)], 1)]
 
 progD2P2Symbolic'Solved :: [Sym]
 progD2P2Symbolic'Solved =
@@ -109,6 +99,3 @@ progD2P2Symbolic'Solved =
   , i 99
   , i 2, i 14, i 0 , i 0
   ]
-  where
-    i   = SymConst
-    v x = SymExp $ MvarPoly $ Map.fromList [(Map.fromList [(x, 1)], 1)]

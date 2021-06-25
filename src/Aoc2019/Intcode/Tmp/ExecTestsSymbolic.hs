@@ -12,7 +12,6 @@ tmpExecSymProg prog = do
     let initState = fromListToIdxIntMap prog
     (result, endState) <- runStateT (runIOTapeMachine exec) initState
     print result
-    let tapeIn  = idxIntMapTape initState
-        tapeOut = idxIntMapTape endState
+    let tapeOut = idxIntMapTape endState
         SymExp tapeOutIdx0Expr = head tapeOut
     print $ mvarPolyExpr tapeOutIdx0Expr

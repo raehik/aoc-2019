@@ -50,3 +50,5 @@ instance Tape t => MonadInterp (IOTapeMachine t) where
         case tapeNext tape of
           Nothing    -> return ()
           Just tape' -> put tape' >> moveRightmost
+
+    fullTape = get >>= return . tapeFull

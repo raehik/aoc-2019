@@ -6,7 +6,6 @@ module Aoc2019.Intcode.Interpreter.SymTest where
 import           Prelude hiding (read)
 
 import           Aoc2019.Intcode.Interpreter
-import           Aoc2019.Intcode.Tape
 import           Aoc2019.Intcode.Tape.IntMapFixedPoint
 import qualified Aoc2019.Intcode.Instruction.Int as Instr
 import           Aoc2019.Intcode.Instruction.Int ( Instruction(..)
@@ -138,7 +137,9 @@ symMul (SymExp   x) (SymExp   y) = SymExp (mvarPolyMul x y)
 
 --------------------------------------------------------------------------------
 
+i :: Int -> Sym
 i   = SymConst
+v :: Var -> Sym
 v x = SymExp $ MvarPoly $ Map.fromList [(Map.fromList [(x, 1)], 1)]
 
 tmpSymtestProgTestMiniD2 :: [Sym]
