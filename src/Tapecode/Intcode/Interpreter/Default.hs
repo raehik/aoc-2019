@@ -58,7 +58,12 @@ handleInstr = \case
     case im of
       PosMode -> next >> read >>= jump >> write input
       ImmMode -> error "program error: write to immmode invalid"
-      RelMode -> error "write to relmode unimplemented"
+      RelMode -> do
+        next
+        i <- read
+        rbo <- annoGet
+        jump (rbo + i)
+        write input
   Out im         -> opStep $ opIO $ do
     next
     iv <- read >>= getParamValue im
