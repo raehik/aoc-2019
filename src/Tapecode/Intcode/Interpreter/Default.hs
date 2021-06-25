@@ -75,7 +75,6 @@ handleInstr = \case
     iv <- getParamValue im i
     anno <- annoGet
     let anno' = anno + iv
-    liftIO $ putStrLn $ "setting new anno: " <> show anno'
     annoSet anno'
     jump nextPos
   Hlt            -> return StepHalt

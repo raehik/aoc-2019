@@ -18,3 +18,4 @@ class Tape t where
     --tapeAnno  :: ALens' t (TapeAnno t)
     tapeAnnoGet :: t -> TapeAnno t
     tapeAnnoSet :: TapeAnno t -> t -> t
+    tapeDefSym :: t -> Symbol t

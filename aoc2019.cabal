@@ -17,16 +17,12 @@ library
       Tapecode.Intcode.Instruction.Int
       Tapecode.Intcode.Interpreter
       Tapecode.Intcode.Interpreter.Default
-      Tapecode.Intcode.Interpreter.Symbolic
       Tapecode.Intcode.Interpreter.Symbolic.MvarPoly
       Tapecode.Intcode.Interpreter.SymTest
       Tapecode.Intcode.Programs
-      Tapecode.Intcode.Programs.D2Symbolic
       Tapecode.Intcode.Programs.D5
-      Tapecode.Intcode.Programs.Symbolic
       Tapecode.Intcode.Tmp.ExecTests
       Tapecode.Intcode.Tmp.ExecTestsOld
-      Tapecode.Intcode.Tmp.ExecTestsSymbolic
       Tapecode.Intcode.Tmp.ExecTestsSymbolic2
       Tapecode.Interpreter
       Tapecode.Machine
